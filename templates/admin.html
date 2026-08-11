@@ -1,6 +1,5 @@
 
 <!doctype html>
-<html lang="ko">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>주문 관리자</title>
@@ -77,6 +76,27 @@ async function setStatus(id,status){
   });
   if(r.ok) location.reload();
 }
+
+async function deleteOrder(id){
+  if(!confirm("이 주문을 완전히 삭제할까요?")){
+    return;
+  }
+
+  const r=await fetch(`/api/order/${id}/delete`,{
+    method:"POST",
+    headers:{
+      "X-Admin-Password":pw
+    }
+  });
+
+  if(r.ok){
+    location.reload();
+  }else{
+    alert("삭제에 실패했습니다.");
+  }
+}
+
+
 
 async function checkNewOrders(){
   try{
