@@ -23,11 +23,12 @@ TABLE_COUNT = int(os.getenv("TABLE_COUNT", "20"))
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "1234")
 
 MENU = [
-    {"id": 1, "name": "소주", "price": 5000, "category": "주류"},
-    {"id": 2, "name": "맥주", "price": 5000, "category": "주류"},
-    {"id": 3, "name": "닭꼬치", "price": 4000, "category": "안주"},
-    {"id": 4, "name": "떡볶이", "price": 8000, "category": "안주"},
-    {"id": 5, "name": "어묵탕", "price": 9000, "category": "안주"},
+    {"id": 1, "name": "콜라", "price": 5000, "category": "음료"},
+    {"id": 2, "name": "사이다", "price": 5000, "category": "음료"},
+    {"id": 3, "name": "내사랑돈까스", "price": 5000, "category": "안주"},
+    {"id": 4, "name": "오승원트월킹", "price": 7000, "category": "안주"},
+    {"id": 5, "name": "민경이그만먹어", "price": 9000, "category": "안주"},
+    {"id": 6, "name": "내사랑돈까스", "price": 9000, "category": "안주"},
 ]
 
 class Order(db.Model):
