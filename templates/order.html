@@ -1,0 +1,106 @@
+
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ table_no }}번 테이블 주문</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;margin:0;background:#f5f5f5}
+.wrap{max-width:600px;margin:auto;padding:18px 18px 120px}
+.hero{background:#111;color:#fff;border-radius:18px;padding:22px;margin-bottom:20px}
+.hero h1{margin:0 0 8px;font-size:27px}
+.category{font-size:21px;font-weight:800;margin:24px 0 10px}
+.card{background:#fff;border-radius:16px;padding:17px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.name{font-weight:800;font-size:18px}
+.price{margin-top:6px;color:#666}
+.counter{display:flex;align-items:center;gap:11px}
+.count-btn{width:38px;height:38px;border:0;border-radius:10px;font-size:21px;cursor:pointer}
+.qty{font-weight:800;min-width:22px;text-align:center}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:13px 18px;box-shadow:0 -3px 12px rgba(0,0,0,.1)}
+.bottom-inner{max-width:600px;margin:auto}
+.total{font-size:19px;font-weight:800;margin-bottom:9px}
+.order-btn{width:100%;padding:15px;border:0;border-radius:13px;background:#111;color:#fff;font-size:18px;font-weight:800;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero">
+<h1>🍻 {{ table_no }}번 테이블</h1>
+<div>메뉴를 고르고 주문하기를 눌러주세요.</div>
+</div>
+
+{% for category in categories %}
+<div class="category">{{ category }}</div>
+{% for item in menu if item.category == category %}
+<div class="card" data-id="{{ item.id }}" data-price="{{ item.price }}">
+  <div class="row">
+    <div>
+      <div class="name">{{ item.name }}</div>
+      <div class="price">{{ "{:,}".format(item.price) }}원</div>
+    </div>
+    <div class="counter">
+      <button class="count-btn" onclick="changeQty({{ item.id }},-1)">−</button>
+      <span class="qty" id="qty-{{ item.id }}">0</span>
+      <button class="count-btn" onclick="changeQty({{ item.id }},1)">＋</button>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endfor %}
+</div>
+
+<div class="bottom">
+<div class="bottom-inner">
+<div class="total">총 금액: <span id="total">0</span>원</div>
+<button id="order-btn" class="order-btn" onclick="submitOrder()">주문하기</button>
+</div>
+</div>
+
+<script>
+const tableNo={{ table_no }};
+const qty={};
+
+function changeQty(id,diff){
+  qty[id]=Math.max(0,(qty[id]||0)+diff);
+  document.getElementById("qty-"+id).textContent=qty[id];
+  calcTotal();
+}
+function calcTotal(){
+  let total=0;
+  document.querySelectorAll(".card").forEach(card=>{
+    const id=Number(card.dataset.id);
+    total+=Number(card.dataset.price)*(qty[id]||0);
+  });
+  document.getElementById("total").textContent=total.toLocaleString();
+}
+async function submitOrder(){
+  const items=Object.entries(qty).filter(([_,q])=>q>0).map(([id,q])=>({id:Number(id),qty:q}));
+  if(!items.length){ alert("메뉴를 1개 이상 선택해주세요."); return; }
+
+  const btn=document.getElementById("order-btn");
+  btn.disabled=true;
+  btn.textContent="주문 중...";
+
+  try{
+    const r=await fetch("/api/order",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({table_no:tableNo,items})
+    });
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.message||"주문 실패");
+
+    alert(`${tableNo}번 테이블 주문 완료!\n주문번호 #${data.order_id}\n총 ${data.total.toLocaleString()}원`);
+    location.reload();
+  }catch(e){
+    alert(e.message);
+    btn.disabled=false;
+    btn.textContent="주문하기";
+  }
+}
+</script>
+</body>
+</html>

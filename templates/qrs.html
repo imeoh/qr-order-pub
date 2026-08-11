@@ -1,0 +1,33 @@
+
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>테이블 QR</title>
+<style>
+body{font-family:Arial;margin:20px}
+.actions{margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px}
+.card{border:2px solid #111;border-radius:14px;padding:14px;text-align:center;break-inside:avoid}
+.card img{width:150px;height:150px}
+.card h2{margin:5px}
+button{padding:10px 14px;border:0;border-radius:10px;background:#111;color:#fff}
+@media print{.actions{display:none}.grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="actions">
+<button onclick="window.print()">전체 QR 인쇄</button>
+<a href="/admin?pw={{ pw }}">관리자 돌아가기</a>
+</div>
+<div class="grid">
+{% for t in range(1,table_count+1) %}
+<div class="card">
+<h2>{{ t }}번 테이블</h2>
+<img src="/qr/{{ t }}.png" alt="{{ t }}번 QR">
+<div>QR을 찍으면 바로 {{ t }}번 주문 화면</div>
+</div>
+{% endfor %}
+</div>
+</body>
+</html>

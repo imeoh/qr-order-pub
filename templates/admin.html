@@ -1,0 +1,104 @@
+
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>주문 관리자</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial;background:#f3f3f3;margin:0;padding:20px}
+.wrap{max-width:1000px;margin:auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+a{color:#111}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:16px 0}
+.totalbox{background:#fff;padding:12px;border-radius:12px;font-weight:bold}
+.order{background:#fff;border-radius:16px;padding:18px;margin-bottom:12px}
+.head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.title{font-size:20px;font-weight:800}
+.meta{color:#666;font-size:13px}
+.items{line-height:1.8;margin:12px 0}
+.buttons{display:flex;gap:7px;flex-wrap:wrap}
+button{border:0;padding:10px 13px;border-radius:10px;cursor:pointer}
+.status{font-weight:bold}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="topbar">
+<h1>🧾 주문 관리자</h1>
+<a href="/admin/qrs?pw={{ pw }}">테이블 QR 보기/인쇄</a>
+</div>
+
+<div class="grid">
+{% for table_no, total in table_totals|dictsort %}
+<div class="totalbox">{{ table_no }}번 누적 {{ "{:,}".format(total) }}원</div>
+{% endfor %}
+</div>
+
+{% if not orders %}
+<div class="order">아직 주문이 없습니다.</div>
+{% endif %}
+
+{% for order in orders %}
+<div class="order">
+<div class="head">
+  <div>
+    <div class="title">#{{ order.id }} · {{ order.table_no }}번 테이블</div>
+    <div class="meta">{{ order.created_at.strftime("%m/%d %H:%M:%S") }}</div>
+  </div>
+  <div class="status">{{ order.status }}</div>
+</div>
+<div class="items">
+{% for item in order.items %}
+<div>{{ item.menu_name }} × {{ item.qty }} = {{ "{:,}".format(item.price*item.qty) }}원</div>
+{% endfor %}
+</div>
+<div><b>총 {{ "{:,}".format(order.total_price) }}원</b></div>
+<div class="buttons" style="margin-top:12px">
+<button onclick="setStatus({{order.id}},'주문접수')">접수</button>
+<button onclick="setStatus({{order.id}},'조리중')">조리중</button>
+<button onclick="setStatus({{order.id}},'완료')">완료</button>
+<button onclick="setStatus({{order.id}},'취소')">취소</button>
+</div>
+</div>
+{% endfor %}
+</div>
+
+<script>
+const pw={{ pw|tojson }};
+let lastOrderId={{ (orders[0].id if orders else 0) }};
+
+async function setStatus(id,status){
+  const r=await fetch(`/api/order/${id}/status`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json","X-Admin-Password":pw},
+    body:JSON.stringify({status})
+  });
+  if(r.ok) location.reload();
+}
+
+async function checkNewOrders(){
+  try{
+    const r=await fetch("/api/orders/latest",{headers:{"X-Admin-Password":pw}});
+    const data=await r.json();
+    if(data.ok && data.orders.length){
+      const newest=data.orders[0].id;
+      if(newest>lastOrderId){
+        lastOrderId=newest;
+        // 브라우저 기본 알림음 대신 간단한 비프음
+        const ctx=new (window.AudioContext||window.webkitAudioContext)();
+        const osc=ctx.createOscillator();
+        const gain=ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value=880;
+        gain.gain.value=0.08;
+        osc.start();
+        setTimeout(()=>{osc.stop(); location.reload();},250);
+      }
+    }
+  }catch(e){}
+}
+setInterval(checkNewOrders,3000);
+</script>
+</body>
+</html>
