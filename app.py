@@ -206,6 +206,21 @@ def latest_orders():
         ]
     })
 
+@app.route("/api/order/<int:order_id>/delete", methods=["POST"])
+def delete_order(order_id):
+    if request.headers.get("X-Admin-Password") != ADMIN_PASSWORD:
+        return jsonify({"ok": False, "message": "관리자 인증 실패"}), 401
+
+    order = db.session.get(Order, order_id)
+
+    if not order:
+        return jsonify({"ok": False, "message": "주문을 찾을 수 없습니다."}), 404
+
+    db.session.delete(order)
+    db.session.commit()
+
+    return jsonify({"ok": True})
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))
     app.run(host="0.0.0.0", port=port, debug=True)
