@@ -59,6 +59,7 @@ button{border:0;padding:10px 13px;border-radius:10px;cursor:pointer}
 <button onclick="setStatus({{order.id}},'조리중')">조리중</button>
 <button onclick="setStatus({{order.id}},'완료')">완료</button>
 <button onclick="setStatus({{order.id}},'취소')">취소</button>
+<button onclick="deleteOrder({{order.id}})">삭제</button>
 </div>
 </div>
 {% endfor %}
